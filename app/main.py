@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import requests
+from fastapi import FastAPI
+
+app = FastAPI()
 
 app = FastAPI(title="Spice Garden API")
 
