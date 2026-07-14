@@ -5,15 +5,14 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    # Ollama
-    OLLAMA_URL: str = "http://localhost:11434/api/chat"
-    OLLAMA_MODEL: str = "llama3.2"
-    OLLAMA_TIMEOUT: int = 60
+    # Groq
+    GROQ_API_KEY: str = ""
 
     # CORS
     ALLOWED_ORIGINS: list = [
         "http://localhost:5173",
         "http://localhost:3000",
+        "https://your-frontend.onrender.com",
     ]
 
     class Config:
