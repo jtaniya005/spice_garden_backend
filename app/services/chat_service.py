@@ -4,6 +4,7 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from app.core.config import settings
 from app.db.menu_data import MENU
+import os
 
 # ── Hidden Mexican Menu ───────────────────────────────────────────────────────
 MEXICAN_MENU = [
@@ -26,8 +27,8 @@ Your personality:
 - Warm, enthusiastic, helpful like a genuine waiter
 - Speak in Hinglish (mix of Hindi + English) naturally
 - Use Hindi words like: bilkul, zaroor, bahut accha, ji, aapka swagat hai
-- Use food emojis 🍛🌶️😊✨
-- Keep replies SHORT — 2-3 sentences max
+- Use food emojis generously
+- Keep replies SHORT - 2-3 sentences max
 
 Memory rules:
 - If customer tells you their name, ALWAYS use it in future replies
@@ -73,9 +74,13 @@ def clear_session(session_id: str):
 
 # ── LLM — Groq + LangChain ───────────────────────────────────────────────────
 def get_llm():
+    # Read key directly from environment variable
+    api_key = os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set!")
     return ChatGroq(
         model="llama-3.1-8b-instant",
-        api_key=settings.GROQ_API_KEY,
+        api_key=api_key,
         temperature=0.7,
         max_tokens=500,
     )
@@ -109,8 +114,8 @@ def get_chat_reply(messages: list, session_id: str = "default") -> str:
 
         return reply
 
+    except HTTPException:
+        raise
     except Exception as e:
-        error_msg = str(e).lower()
-        if "api_key" in error_msg or "auth" in error_msg:
-            raise HTTPException(status_code=401, detail="Invalid Groq API key!")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        raise HTTPException(status_code=500, detail=f"Chat error: {error_msg}")
