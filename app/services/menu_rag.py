@@ -4,58 +4,41 @@ Single source of truth: app/db/menu_data.py (MENU list — website + regional_in
 AI only receives the few relevant items per query, never the full list.
 """
 
-import chromadb
-from chromadb.utils import embedding_functions
+from langchain_community.retrievers import BM25Retriever
+from langchain_core.documents import Document
 from app.db.menu_data import MENU
 
-_client = None
-_collection = None
+_retriever = None
 
+def get_retriever():
+    global _retriever
+    if _retriever is not None:
+        return _retriever
 
-def get_collection():
-    global _client, _collection
-    if _collection is not None:
-        return _collection
-
-    _client = chromadb.Client()
-    ef = embedding_functions.DefaultEmbeddingFunction()
-    _collection = _client.get_or_create_collection(name="menu_items", embedding_function=ef)
-
-    if _collection.count() == 0:
-        _index_menu()
-
-    return _collection
-
-
-def _index_menu():
-    col = get_collection()
-    documents, metadatas, ids = [], [], []
-
+    docs = []
     for item in MENU:
         region_txt = f" Regional origin: {item['region']}." if item.get("region") else ""
-        doc = (
-            f"{item['name']}. Category: {item['category']}.{region_txt} "
-            f"Price: Rs.{item['price']}. Spice level: {item['spice']} out of 5. "
-            f"Tags: {', '.join(item['tags'])}. Description: {item['description']}."
+        content = (
+            f"{item['name']} {item['category']} {' '.join(item['tags'])} {item.get('region', '')} {item['description']}"
         )
-        documents.append(doc)
-        metadatas.append({"id": item["id"]})
-        ids.append(str(item["id"]))
-
-    col.add(documents=documents, metadatas=metadatas, ids=ids)
-    print(f"✅ Indexed {len(documents)} menu items into ChromaDB")
-
+        docs.append(Document(page_content=content.lower(), metadata={"id": item["id"]}))
+    
+    _retriever = BM25Retriever.from_documents(docs)
+    return _retriever
 
 def search_menu(query: str, n_results: int = 6) -> list[dict]:
-    col = get_collection()
-    results = col.query(query_texts=[query], n_results=min(n_results, col.count()))
-
+    retriever = get_retriever()
+    retriever.k = n_results
+    # BM25 works best with tokenized lowercase queries
+    clean_query = query.lower()
+    
+    docs = retriever.invoke(clean_query)
+    
     items = []
-    if results and results["metadatas"]:
-        for meta in results["metadatas"][0]:
-            full_item = next((i for i in MENU if i["id"] == meta["id"]), None)
-            if full_item:
-                items.append(full_item)
+    for doc in docs:
+        full_item = next((i for i in MENU if i["id"] == doc.metadata["id"]), None)
+        if full_item:
+            items.append(full_item)
     return items
 
 

@@ -23,15 +23,19 @@ class ChatResponse(BaseModel):
     reply: str
     session_id: str
     order_items: List[OrderItem] = []  # auto cart items
+    customer_name: str | None = None
+    payment_method: str | None = None
 
 @router.post("/", response_model=ChatResponse)
 def chat(req: ChatRequest):
     messages = [{"role": m.role, "content": m.content} for m in req.messages]
-    reply, order_items = get_chat_reply(messages, session_id=req.session_id)
+    reply, order_items, customer_name, payment_method = get_chat_reply(messages, session_id=req.session_id)
     return ChatResponse(
         reply=reply,
         session_id=req.session_id,
         order_items=order_items,
+        customer_name=customer_name,
+        payment_method=payment_method
     )
 
 @router.delete("/{session_id}")

@@ -7,4 +7,6 @@ python-dotenv
 langchain
 langchain-groq
 langchain-core
-chromadb
+langgraph
+langchain-community
+rank_bm25
