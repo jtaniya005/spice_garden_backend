@@ -65,6 +65,16 @@ MENU = [
     {"id": 62, "name": "Paneer Tikka",             "category": "appetizers",  "price": 219, "description": "Marinated paneer grilled with bell peppers and onions.", "tags": ["veg", "special"], "spice": 2, "on_website": True},
     {"id": 87, "name": "Mushroom Cutlet",          "category": "appetizers",  "price": 159, "description": "Crispy mushroom patties with tamarind chutney.", "tags": ["veg", "special"], "spice": 1, "on_website": True},
 
+    # Salads
+    {"id": 64, "name": "Green Garden Salad",       "category": "salads",      "price": 149, "description": "Fresh mixed greens with cucumber, tomato, and house dressing.", "tags": ["veg"], "spice": 0, "on_website": True},
+    {"id": 65, "name": "Greek Salad",              "category": "salads",      "price": 189, "description": "Tomatoes, cucumbers, feta cheese, olives with olive oil dressing.", "tags": ["veg"], "spice": 0, "on_website": True},
+    {"id": 66, "name": "Beetroot & Walnut Salad",  "category": "salads",      "price": 199, "description": "Roasted beetroot with walnuts and tangy vinaigrette.", "tags": ["veg", "special"], "spice": 0, "on_website": True},
+    {"id": 67, "name": "Caprese Salad",            "category": "salads",      "price": 169, "description": "Fresh mozzarella, tomato, and basil with balsamic glaze.", "tags": ["veg"], "spice": 0, "on_website": True},
+    {"id": 91, "name": "Spinach & Pomegranate Salad", "category": "salads",   "price": 179, "description": "Fresh spinach with pomegranate seeds and walnut dressing.", "tags": ["veg", "special"], "spice": 0, "on_website": True},
+    {"id": 92, "name": "Coleslaw",                 "category": "salads",      "price": 129, "description": "Crispy cabbage and carrot slaw with creamy dressing.", "tags": ["veg"], "spice": 0, "on_website": True},
+    {"id": 93, "name": "Corn & Bell Pepper Salad", "category": "salads",      "price": 149, "description": "Sweet corn with colorful peppers and lemon vinaigrette.", "tags": ["veg"], "spice": 0, "on_website": True},
+    {"id": 94, "name": "Mixed Leaf Salad",         "category": "salads",      "price": 159, "description": "Rocket, spinach, and mixed greens with honey mustard dressing.", "tags": ["veg"], "spice": 0, "on_website": True},
+
     # Desserts
     {"id": 13, "name": "Gulab Jamun",              "category": "desserts",    "price": 129, "description": "Milk dumplings in rose-saffron sugar syrup.", "tags": ["veg", "special"], "spice": 0, "on_website": True},
     {"id": 14, "name": "Chocolate Lava Cake",      "category": "desserts",    "price": 179, "description": "Warm fondant with molten centre and vanilla ice cream.", "tags": ["veg"], "spice": 0, "on_website": True},
