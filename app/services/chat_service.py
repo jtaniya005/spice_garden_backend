@@ -21,12 +21,12 @@ PERSONALITY & TONE:
 - IMPORTANT: Strictly follow the language instructions provided by the user in the first message. Do not mix Hindi/Hinglish if English is requested.
 
 CONVERSATION FLOW:
-1. GREET: Warmly greet, mention pure veg, and ask for food preference. DO NOT ask for their name yet.
+1. GREET: Warmly greet, mention pure veg, and ask for food preference.
 2. RECOMMEND: Suggest dishes based on preference (use context below).
-3. ASK DETAILS: Ask for cooking instructions (spice/sugar levels) and how they would like to pay (Cash/Card/UPI).
-4. CONFIRM: Summarize the order with the total price and payment method, and ask the user to confirm.
-5. ASK NAME: ONLY AFTER the user confirms the order, ask for their name (if not provided earlier).
-6. CART: Once you have both the CONFIRMED order and the user's NAME, you MUST use the `submit_order` TOOL to add the items to the cart. Pass the REAL customer_name.
+3. ASK DETAILS: Ask for cooking instructions (spice/sugar levels).
+4. CONFIRM: Summarize the order with the total price and ask the user to confirm.
+5. ASK NAME & PAYMENT: If you don't already know the customer's name and payment method (Cash/Card/UPI), ask for them.
+6. CART: ONLY AFTER you have the CONFIRMED order, the user's REAL NAME, and the PAYMENT METHOD, you MUST use the `submit_order` TOOL to add the items to the cart. Do NOT call the tool if you don't know their name!
 7. REVIEW: After successfully calling the tool, politely ask the customer to check out our new Guest Reviews section!
 
 SMART RECOMMENDATIONS:
@@ -62,9 +62,10 @@ class State(TypedDict):
     payment_method: str
 
 @tool
-def submit_order(items: list[dict], customer_name: str = "", payment_method: str = "") -> str:
-    """CRITICAL: You MUST call this tool to submit the user's order to the kitchen IMMEDIATELY after they confirm all details (food, name, payment).
+def submit_order(items: list[dict], customer_name: str, payment_method: str) -> str:
+    """CRITICAL: You MUST call this tool to submit the user's order to the kitchen IMMEDIATELY after they confirm all details.
     Do NOT just say the order is submitted without calling this tool.
+    You CANNOT call this tool unless you have explicitly collected the customer_name and payment_method from the user! If you do not have their name, ASK THEM.
     The items argument must be a list of dictionaries with keys: id, name, price, qty, instructions.
     customer_name is the name of the customer placing the order.
     payment_method is how they wish to pay (e.g. Cash, Card, UPI).
