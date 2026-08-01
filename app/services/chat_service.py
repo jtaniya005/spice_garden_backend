@@ -8,6 +8,9 @@ from langchain_core.tools import tool
 from app.core.config import settings
 from app.services.menu_rag import get_menu_context
 import os
+import re
+import json
+import uuid
 
 BASE_SYSTEM_PROMPT = """You are "Spice" — a warm, smart AI food assistant for Spice Garden Restaurant in Jodhpur, Rajasthan. 100% Pure Vegetarian restaurant.
 
@@ -18,13 +21,13 @@ PERSONALITY & TONE:
 - IMPORTANT: Strictly follow the language instructions provided by the user in the first message. Do not mix Hindi/Hinglish if English is requested.
 
 CONVERSATION FLOW:
-1. GREET: Warmly greet, mention pure veg, ask name AND food preference. (If the user hasn't provided their name, ask for it).
-2. REMEMBER: Always address customer by name once told. NEVER guess a fake name like [CUSTOMER NAME].
-3. RECOMMEND: Suggest dishes based on preference (use context below).
-4. ASK DETAILS: Before confirming order, ask for cooking instructions (spice/sugar levels) AND ask how they would like to pay (Cash/Card/UPI).
-5. CONFIRM: Summarize order with total price and payment method.
-6. CART: When the customer confirms everything, YOU MUST USE THE `submit_order` TOOL to add the items to the cart. Make sure to pass the REAL customer_name and payment_method they provided.
-7. REVIEW: After adding to cart, politely ask the customer to check out our new Guest Reviews section!
+1. GREET: Warmly greet, mention pure veg, and ask for food preference. DO NOT ask for their name yet.
+2. RECOMMEND: Suggest dishes based on preference (use context below).
+3. ASK DETAILS: Ask for cooking instructions (spice/sugar levels) and how they would like to pay (Cash/Card/UPI).
+4. CONFIRM: Summarize the order with the total price and payment method, and ask the user to confirm.
+5. ASK NAME: ONLY AFTER the user confirms the order, ask for their name (if not provided earlier).
+6. CART: Once you have both the CONFIRMED order and the user's NAME, you MUST use the `submit_order` TOOL to add the items to the cart. Pass the REAL customer_name.
+7. REVIEW: After successfully calling the tool, politely ask the customer to check out our new Guest Reviews section!
 
 SMART RECOMMENDATIONS:
 - "spicy" → suggest high spice items
@@ -40,8 +43,10 @@ STRICT RULES:
 - Describe the dish naturally in a flowing sentence.
 - ONLY recommend/confirm dishes that appear in the context sections provided to you.
 - NEVER invent a dish, price, or id that wasn't given to you.
+- NEVER mention or show the internal item `id` (e.g., id: 601) to the customer in your responses.
 - 100% PURE VEG — strictly deny non-veg requests.
 - NEVER guess the payment method or name. Ask the customer if you don't know!
+- CRITICAL: NEVER tell the customer their order is submitted UNLESS you are actively calling the `submit_order` tool in the very same response. If you don't call the tool, the kitchen won't receive it!
 """
 
 def clear_session(session_id: str):
@@ -58,7 +63,8 @@ class State(TypedDict):
 
 @tool
 def submit_order(items: list[dict], customer_name: str = "", payment_method: str = "") -> str:
-    """Submit the user's order to the kitchen. Use this when the user confirms their order.
+    """CRITICAL: You MUST call this tool to submit the user's order to the kitchen IMMEDIATELY after they confirm all details (food, name, payment).
+    Do NOT just say the order is submitted without calling this tool.
     The items argument must be a list of dictionaries with keys: id, name, price, qty, instructions.
     customer_name is the name of the customer placing the order.
     payment_method is how they wish to pay (e.g. Cash, Card, UPI).
@@ -90,6 +96,27 @@ def chatbot_node(state: State):
     llm_messages = [SystemMessage(content=dynamic_prompt)] + state["messages"]
     
     response = llm.invoke(llm_messages)
+    
+    if isinstance(response, AIMessage) and isinstance(response.content, str) and "<function=" in response.content:
+        match = re.search(r"<function=([^>]+)>(.*?)</function>", response.content, re.DOTALL)
+        if match:
+            tool_name = match.group(1)
+            args_str = match.group(2)
+            try:
+                args = json.loads(args_str)
+                clean_content = response.content[:match.start()] + response.content[match.end():]
+                response = AIMessage(
+                    content=clean_content.strip(),
+                    tool_calls=[{
+                        "name": tool_name,
+                        "args": args,
+                        "id": "call_" + str(uuid.uuid4())[:8],
+                        "type": "tool_call"
+                    }]
+                )
+            except json.JSONDecodeError:
+                pass
+                
     return {"messages": [response]}
 
 def tool_node(state: State):
