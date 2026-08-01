@@ -9,21 +9,16 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="🍛 Spice Garden Restaurant API — Powered by Groq + LangChain",
 )
-
-# ── CORS ─────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(menu.router)
 app.include_router(chat.router)
 app.include_router(orders.router)
 
-# ── Root & Health ─────────────────────────────────────────────────────────────
 @app.get("/", tags=["Root"])
 def root():
     return {
