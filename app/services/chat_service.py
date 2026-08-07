@@ -5,7 +5,7 @@ from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langchain_core.tools import tool
-from app.core.config import settings
+from app.core.config import Settings
 from app.services.menu_rag import get_menu_context
 import os
 import re
@@ -72,8 +72,16 @@ def submit_order(items: list[dict], customer_name: str, payment_method: str) -> 
     """
     return f"Successfully added {len(items)} items to cart."
 
+def get_groq_api_key() -> str:
+    return os.environ.get("GROQ_API_KEY") or Settings().GROQ_API_KEY
+
+
+def use_live_chat() -> bool:
+    return os.environ.get("USE_LIVE_CHAT", "false").lower() in {"1", "true", "yes", "on"}
+
+
 def get_llm():
-    api_key = os.environ.get("GROQ_API_KEY") or settings.GROQ_API_KEY
+    api_key = get_groq_api_key()
     if not api_key:
         raise HTTPException(status_code=500, detail="GROQ_API_KEY not set!")
     return ChatGroq(model="llama-3.1-8b-instant", api_key=api_key, temperature=0.7, max_tokens=400).bind_tools([submit_order])
@@ -159,6 +167,14 @@ graph_builder.add_edge("tools", "chatbot")
 graph = graph_builder.compile()
 
 def get_chat_reply(messages: list, session_id: str = "default"):
+    if not use_live_chat() or not get_groq_api_key():
+        return (
+            "I’m sorry, the assistant is temporarily unavailable. Please try again in a moment or place your order directly with us. 🍛",
+            [],
+            None,
+            None,
+        )
+
     try:
         lc_messages = []
         for msg in messages:
