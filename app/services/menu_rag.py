@@ -30,7 +30,9 @@ def search_menu(query: str, n_results: int = 6) -> list[dict]:
     retriever = get_retriever()
     retriever.k = n_results
     # BM25 works best with tokenized lowercase queries
-    clean_query = query.lower()
+    import re
+    clean_query = re.sub(r'[^\w\s]', '', query.lower())
+    clean_query = clean_query.replace("specials", "special").replace("todays", "").replace("best", "special")
     
     docs = retriever.invoke(clean_query)
     
