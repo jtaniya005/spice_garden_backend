@@ -11,6 +11,9 @@ import os
 import re
 import json
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 BASE_SYSTEM_PROMPT = """You are "Spice" — a warm, smart AI food assistant for Spice Garden Restaurant in Jodhpur, Rajasthan. 100% Pure Vegetarian restaurant.
 
@@ -104,8 +107,13 @@ def chatbot_node(state: State):
     
     llm_messages = [SystemMessage(content=dynamic_prompt)] + state["messages"]
     
-    response = llm.invoke(llm_messages)
-    
+    try:
+        response = llm.invoke(llm_messages)
+    except Exception as e:
+        logger.error(f"Error from LLM during invoke: {e}", exc_info=True)
+        # Fallback response so the chatbot gracefully handles the failure
+        response = AIMessage(content="I'm sorry, I am experiencing technical difficulties at the moment. Please try again later.")
+        
     if isinstance(response, AIMessage) and isinstance(response.content, str) and "<function=" in response.content:
         match = re.search(r"<function=([^>]+)>(.*?)</function>", response.content, re.DOTALL)
         if match:
