@@ -27,10 +27,9 @@ CONVERSATION FLOW:
 1. GREET: Warmly greet, mention pure veg, and ask for food preference.
 2. RECOMMEND: Suggest dishes based on preference (use context below).
 3. ASK DETAILS: Ask for cooking instructions (spice/sugar levels).
-4. CONFIRM: Summarize the order with the total price and ask the user to confirm.
-5. ASK NAME & PAYMENT: If you don't already know the customer's name and payment method (Cash/Card/UPI), ask for them.
-6. CART: ONLY AFTER you have the CONFIRMED order, the user's REAL NAME, and the PAYMENT METHOD, you MUST use the `submit_order` TOOL to add the items to the cart. Do NOT call the tool if you don't know their name!
-7. REVIEW: After successfully calling the tool, politely ask the customer to check out our new Guest Reviews section!
+4. ASK NAME & PAYMENT: If you don't already know the customer's name and payment method (Cash/Card/UPI), ask for them.
+5. CART: ONCE you know what they want to order, their REAL NAME, and their PAYMENT METHOD, you MUST IMMEDIATELY use the `submit_order` TOOL to add the items to the cart. DO NOT ask them to confirm or check the order again, just submit it!
+6. REVIEW: After successfully calling the tool, politely ask the customer to check out our new Guest Reviews section!
 
 SMART RECOMMENDATIONS:
 - "spicy" → suggest high spice items
@@ -66,7 +65,7 @@ class State(TypedDict):
 
 @tool
 def submit_order(items: list[dict], customer_name: str, payment_method: str) -> str:
-    """CRITICAL: You MUST call this tool to submit the user's order to the kitchen IMMEDIATELY after they confirm all details.
+    """CRITICAL: You MUST call this tool to submit the user's order to the kitchen IMMEDIATELY. DO NOT ASK FOR CONFIRMATION!
     Do NOT just say the order is submitted without calling this tool.
     You CANNOT call this tool unless you have explicitly collected the customer_name and payment_method from the user! If the user ignored your initial greeting asking for their name, you MUST ask them again before submitting!
     The items argument must be a list of dictionaries with keys: id, name, price, qty, instructions.
@@ -111,11 +110,10 @@ def chatbot_node(state: State):
         response = llm.invoke(llm_messages)
     except Exception as e:
         logger.error(f"Error from LLM during invoke: {e}", exc_info=True)
-        # Fallback response so the chatbot gracefully handles the failure
-        response = AIMessage(content="I'm sorry, I am experiencing technical difficulties at the moment. Please try again later.")
+        response = AIMessage(content=f"I'm sorry, I am experiencing technical difficulties at the moment. Please try again later. Error: {str(e)}")
         
-    if isinstance(response, AIMessage) and isinstance(response.content, str) and "<function=" in response.content:
-        match = re.search(r"<function=([^>]+)>(.*?)</function>", response.content, re.DOTALL)
+    if isinstance(response, AIMessage) and isinstance(response.content, str):
+        match = re.search(r"<?function=([^>]+)>(.*?)</function>", response.content, re.DOTALL)
         if match:
             tool_name = match.group(1)
             args_str = match.group(2)
@@ -148,6 +146,16 @@ def tool_node(state: State):
             if tool_call["name"] == "submit_order":
                 args = tool_call["args"]
                 items = args.get("items", [])
+                if isinstance(items, str):
+                    try:
+                        items = json.loads(items)
+                    except Exception:
+                        items = []
+                
+                for item in items:
+                    if "id" not in item:
+                        item["id"] = hash(item.get("name", "Item")) % 10000 + 10000
+                        
                 order_items.extend(items)
                 if args.get("customer_name"): customer_name = args.get("customer_name")
                 if args.get("payment_method"): payment_method = args.get("payment_method")
