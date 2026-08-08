@@ -32,8 +32,10 @@ def chat(req: ChatRequest):
     messages = [{"role": m.role, "content": m.content} for m in req.messages]
     try:
         reply, order_items, customer_name, payment_method = get_chat_reply(messages, session_id=req.session_id)
-    except Exception:
-        reply = "I’m sorry, the assistant is temporarily unavailable. Please try again in a moment or place your order directly with us. 🍛"
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        reply = f"I’m sorry, the assistant is temporarily unavailable. Please try again in a moment or place your order directly with us. 🍛 (Error: {str(e)})"
         order_items = []
         customer_name = None
         payment_method = None
