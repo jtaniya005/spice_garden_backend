@@ -80,7 +80,7 @@ def get_groq_api_key() -> str:
 
 
 def use_live_chat() -> bool:
-    return os.environ.get("USE_LIVE_CHAT", "false").lower() in {"1", "true", "yes", "on"}
+    return os.environ.get("USE_LIVE_CHAT", "true").lower() in {"1", "true", "yes", "on"}
 
 
 def get_llm():

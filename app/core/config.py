@@ -1,4 +1,7 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     APP_NAME: str = "Spice Garden API"
@@ -7,6 +10,7 @@ class Settings(BaseSettings):
 
     # Groq
     GROQ_API_KEY: str = ""
+    USE_LIVE_CHAT: bool = True
 
     # CORS
     ALLOWED_ORIGINS: list = [
@@ -15,7 +19,6 @@ class Settings(BaseSettings):
         "https://your-frontend.onrender.com",
     ]
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
