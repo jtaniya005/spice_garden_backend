@@ -48,7 +48,7 @@ STRICT RULES:
 - NEVER invent a dish, price, or id that wasn't given to you.
 - NEVER mention or show the internal item `id` (e.g., id: 601) to the customer in your responses.
 - 100% PURE VEG — strictly deny non-veg requests.
-- NEVER guess the payment method or name. Ask the customer if you don't know!
+- NEVER guess the payment method or name. If the user hasn't told you their name yet, YOU MUST ASK FOR THEIR NAME before confirming the order.
 - CRITICAL: NEVER tell the customer their order is submitted UNLESS you are actively calling the `submit_order` tool in the very same response. If you don't call the tool, the kitchen won't receive it!
 """
 
@@ -68,9 +68,9 @@ class State(TypedDict):
 def submit_order(items: list[dict], customer_name: str, payment_method: str) -> str:
     """CRITICAL: You MUST call this tool to submit the user's order to the kitchen IMMEDIATELY after they confirm all details.
     Do NOT just say the order is submitted without calling this tool.
-    You CANNOT call this tool unless you have explicitly collected the customer_name and payment_method from the user! If you do not have their name, ASK THEM.
+    You CANNOT call this tool unless you have explicitly collected the customer_name and payment_method from the user! If the user ignored your initial greeting asking for their name, you MUST ask them again before submitting!
     The items argument must be a list of dictionaries with keys: id, name, price, qty, instructions.
-    customer_name is the name of the customer placing the order.
+    customer_name is the name of the customer placing the order. It MUST be a real name provided by the user. Do not use placeholders.
     payment_method is how they wish to pay (e.g. Cash, Card, UPI).
     """
     return f"Successfully added {len(items)} items to cart."
