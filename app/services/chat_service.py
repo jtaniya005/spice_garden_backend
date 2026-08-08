@@ -49,6 +49,7 @@ STRICT RULES:
 - 100% PURE VEG — strictly deny non-veg requests.
 - NEVER guess the payment method or name. If the user hasn't told you their name yet, YOU MUST ASK FOR THEIR NAME before confirming the order.
 - CRITICAL: NEVER tell the customer their order is submitted UNLESS you are actively calling the `submit_order` tool in the very same response. If you don't call the tool, the kitchen won't receive it!
+- CRITICAL: The ONLY tool you have is `submit_order`. DO NOT invent or try to use any other tools (like `ask_name_and_payment`). Just ask the customer questions using normal text!
 """
 
 def clear_session(session_id: str):
@@ -113,7 +114,7 @@ def chatbot_node(state: State):
         response = AIMessage(content=f"I'm sorry, I am experiencing technical difficulties at the moment. Please try again later. Error: {str(e)}")
         
     if isinstance(response, AIMessage) and isinstance(response.content, str):
-        match = re.search(r"<?function=([^>]+)>(.*?)</function>", response.content, re.DOTALL)
+        match = re.search(r"[<(]?function=([^>)]+)[>)](.*?)(?:</function>?|$)", response.content, re.DOTALL)
         if match:
             tool_name = match.group(1)
             args_str = match.group(2)
@@ -162,6 +163,11 @@ def tool_node(state: State):
                 
                 messages.append(ToolMessage(
                     content="Order submitted. Tell the user it was added to the cart.",
+                    tool_call_id=tool_call["id"]
+                ))
+            else:
+                messages.append(ToolMessage(
+                    content=f"Error: Tool {tool_call['name']} does not exist. DO NOT use it.",
                     tool_call_id=tool_call["id"]
                 ))
     
