@@ -59,7 +59,7 @@ def get_menu_context(query: str) -> str:
         context += "RELEVANT WEBSITE MENU ITEMS:\n"
         for item in website_items:
             context += (
-                f"- {item['name']} (id:{item['id']}) [{item['category']}] "
+                f"- {item['name']} [{item['category']}] "
                 f"Rs.{item['price']} | Spice:{item['spice']}/5 | "
                 f"Tags:{','.join(item['tags'])} | {item['description']}\n"
             )
@@ -69,7 +69,7 @@ def get_menu_context(query: str) -> str:
         for item in hidden_items:
             region_txt = f" [Region: {item['region']}]" if item.get("region") else ""
             context += (
-                f"- {item['name']} (id:{item['id']}){region_txt} "
+                f"- {item['name']}{region_txt} "
                 f"Rs.{item['price']} | Spice:{item['spice']}/5 | {item['description']}\n"
             )
 

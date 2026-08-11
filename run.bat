@@ -4,4 +4,7 @@ echo.
 echo Make sure Ollama is running: ollama serve
 echo.
 call .venv\Scripts\activate
+pushd %~dp0
+cd spice_garden
 uvicorn app.main:app --reload --port 8000
+popd
