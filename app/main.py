@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import menu, chat, orders
+from app.routers import menu, chat, orders, reservation, admin
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -18,6 +18,8 @@ app.add_middleware(
 app.include_router(menu.router)
 app.include_router(chat.router)
 app.include_router(orders.router)
+app.include_router(reservation.router)
+app.include_router(admin.router)
 
 @app.get("/", tags=["Root"])
 def root():

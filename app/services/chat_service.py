@@ -152,12 +152,35 @@ def tool_node(state: State):
                         items = json.loads(items)
                     except Exception:
                         items = []
-                
+
+                normalized_items = []
                 for item in items:
-                    if "id" not in item:
-                        item["id"] = hash(item.get("name", "Item")) % 10000 + 10000
-                        
-                order_items.extend(items)
+                    if not isinstance(item, dict):
+                        continue
+
+                    item_id = item.get("id")
+                    if item_id is None or item_id == "null" or item_id == "":
+                        item_id = hash(item.get("name", "Item")) % 10000 + 10000
+                    elif isinstance(item_id, str):
+                        try:
+                            item_id = int(item_id)
+                        except ValueError:
+                            item_id = hash(item.get("name", "Item")) % 10000 + 10000
+                    elif isinstance(item_id, float):
+                        item_id = int(item_id)
+
+                    item["id"] = item_id
+                    if "qty" in item:
+                        try:
+                            item["qty"] = int(item["qty"])
+                        except Exception:
+                            item["qty"] = 1
+                    else:
+                        item["qty"] = 1
+
+                    normalized_items.append(item)
+
+                order_items.extend(normalized_items)
                 if args.get("customer_name"): customer_name = args.get("customer_name")
                 if args.get("payment_method"): payment_method = args.get("payment_method")
                 
