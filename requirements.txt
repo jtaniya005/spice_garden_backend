@@ -10,3 +10,4 @@ langchain-core
 langgraph
 langchain-community
 rank_bm25
+langchain-openai

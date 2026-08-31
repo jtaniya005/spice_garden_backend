@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
 from typing import Annotated, TypedDict
 from langgraph.graph import StateGraph, START, END
@@ -75,19 +75,24 @@ def submit_order(items: list[dict], customer_name: str, payment_method: str) -> 
     """
     return f"Successfully added {len(items)} items to cart."
 
-def get_groq_api_key() -> str:
-    return os.environ.get("GROQ_API_KEY") or Settings().GROQ_API_KEY
-
+def get_openrouter_api_key() -> str:
+    return os.environ.get("OPENROUTER_API_KEY")
 
 def use_live_chat() -> bool:
     return os.environ.get("USE_LIVE_CHAT", "true").lower() in {"1", "true", "yes", "on"}
 
-
 def get_llm():
-    api_key = get_groq_api_key()
+    api_key = get_openrouter_api_key()
     if not api_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set!")
-    return ChatGroq(model="llama-3.1-8b-instant", api_key=api_key, temperature=0.7, max_tokens=400).bind_tools([submit_order])
+        raise HTTPException(status_code=500, detail="OPENROUTER_API_KEY not set!")
+    return ChatOpenAI(
+        model="deepseek/deepseek-v4-flash", 
+        api_key=api_key, 
+        base_url="https://openrouter.ai/api/v1", 
+        temperature=0.7, 
+        max_tokens=400,
+        model_kwargs={"extra_body": {"model_reasoning_effort": "medium"}}
+    ).bind_tools([submit_order])
 
 def chatbot_node(state: State):
     llm = get_llm()
@@ -212,7 +217,7 @@ graph_builder.add_edge("tools", "chatbot")
 graph = graph_builder.compile()
 
 def get_chat_reply(messages: list, session_id: str = "default"):
-    if not use_live_chat() or not get_groq_api_key():
+    if not use_live_chat() or not get_openrouter_api_key():
         return (
             "I’m sorry, the assistant is temporarily unavailable. Please try again in a moment or place your order directly with us. 🍛",
             [],
