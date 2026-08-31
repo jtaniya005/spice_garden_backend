@@ -8,8 +8,9 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    # Groq
+    # Groq & OpenRouter
     GROQ_API_KEY: str = ""
+    OPENROUTER_API_KEY: str = ""
     USE_LIVE_CHAT: bool = True
 
     # CORS

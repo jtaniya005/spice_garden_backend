@@ -44,15 +44,12 @@ def search_menu(query: str, n_results: int = 6) -> list[dict]:
     return items
 
 
-def get_menu_context(query: str) -> str:
-    """Relevant items only — never the full menu."""
-    relevant_items = search_menu(query, n_results=6)
+def get_menu_context(query: str = "") -> str:
+    """Returns the full menu context so the AI knows all available dishes."""
+    from app.db.menu_data import MENU
 
-    if not relevant_items:
-        return "No specific menu items found for this query."
-
-    website_items  = [i for i in relevant_items if i["on_website"]]
-    hidden_items    = [i for i in relevant_items if not i["on_website"]]
+    website_items  = [i for i in MENU if i["on_website"]]
+    hidden_items    = [i for i in MENU if not i["on_website"]]
 
     context = ""
     if website_items:
